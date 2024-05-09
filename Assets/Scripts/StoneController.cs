@@ -7,7 +7,8 @@ public class StoneController : MonoBehaviour
     RectTransform rectTransform;
     Renderer renderer;
 
-    private bool isRotation;
+    public int number;
+    public bool isRotation;
     private bool isColorChange;
     private float rotationSpeed;
     private float rotationTime;
@@ -61,5 +62,22 @@ public class StoneController : MonoBehaviour
                 rotationCount = 0.0f;
             }
         }
+    }
+
+    public void OnTouch()
+    {
+        int Y = 0;
+        int X = 0;
+        number = number - 1;
+        if (number <= 8)
+        {
+            Y = number;
+        }
+        else
+        {
+            X = number / 8;
+            Y = (number - (8 * X)) % 8;
+        }
+        FindObjectOfType<GameController>().PutCheck(X,Y);
     }
 }

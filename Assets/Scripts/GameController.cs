@@ -1,12 +1,12 @@
 using System.Collections;
 using System.Collections.Generic;
-using UnityEditor.SceneManagement;
 using UnityEngine;
 
 public class GameController : MonoBehaviour
 {
     private GameObject[,] stones;
     private int count;
+    private bool isPut;
 
     public enum TurnState { Black, White} //どっちのターンか
     public TurnState turnState;
@@ -14,6 +14,7 @@ public class GameController : MonoBehaviour
     void Start()
     {
         count = 0;
+        isPut = false;
         stones = new GameObject[8,8];//8×8のオブジェクト配列作成
         turnState = TurnState.Black; //最初は黒のターン
 
@@ -26,6 +27,7 @@ public class GameController : MonoBehaviour
                 stones[x, y] = GameObject.Find("Stone (" + count.ToString() + ")");
                 stones[x, y].GetComponent<Renderer>().material.color = new Color(255, 255, 255, 0);
                 stones[x, y].GetComponent<StoneController>().colorState = StoneController.ColorState.None;
+                stones[x, y].GetComponent<StoneController>().number = count;
             }
         }
 
@@ -34,7 +36,7 @@ public class GameController : MonoBehaviour
         stones[3, 3].GetComponent<Renderer>().material.color = new Color(255, 255, 255, 255);
         stones[3, 3].GetComponent<StoneController>().colorState = StoneController.ColorState.White;
         stones[4, 4].GetComponent<Renderer>().material.color = new Color(255, 255, 255, 255);
-        stones[3, 4].GetComponent<StoneController>().colorState = StoneController.ColorState.White;
+        stones[4, 4].GetComponent<StoneController>().colorState = StoneController.ColorState.White;
         //黒
         stones[3, 4].GetComponent<Renderer>().material.color = new Color(0, 0, 0, 255);
         stones[3, 4].GetComponent<StoneController>().colorState = StoneController.ColorState.Black;
@@ -48,161 +50,492 @@ public class GameController : MonoBehaviour
         
     }
 
-    private void PutCheck(int X, int Y) //置くことができるか確認
+    public void PutCheck(int X, int Y) //置くことができるか確認
     {
+        Debug.Log("X = " + X + "Y = " + Y);
         if (turnState == TurnState.Black) //黒のターン
         {
-            //黒の石を探す
-            //横
-            for (int x = 0; x < 8; x++)
-            {
-                if (stones[x, Y].GetComponent<StoneController>().colorState == StoneController.ColorState.Black)
-                {
-                    //間がすべて白なら
-                    if (x < X)
-                    {
-                        for (int i = x+1; i < X; i++)
-                        {
-                            if (stones[i, Y].GetComponent<StoneController>().colorState != StoneController.ColorState.White)
-                            {
-                                break;
-                            }
-                            if (i == X - 1)
-                            {
-                                //色を変える
-                            }
-                        }
-                    }
-                    else
-                    {
-                        for (int i = X + 1; i < x; i++)
-                        {
-                            if (stones[i, Y].GetComponent<StoneController>().colorState != StoneController.ColorState.White)
-                            {
-                                break;
-                            }
-                            if (i == x - 1)
-                            {
-                                //色を変える
-                            }
-                        }
-                    }
-                }
-            }
-            //縦
-            for (int y = 0; y < 8; y++)
-            {
-                if (stones[X, y].GetComponent<StoneController>().colorState == StoneController.ColorState.Black)
-                {
-                    //間がすべて白なら
-                    if (y < Y)
-                    {
-                        for (int i = y + 1; i < Y; i++)
-                        {
-                            if (stones[X, i].GetComponent<StoneController>().colorState != StoneController.ColorState.White)
-                            {
-                                break;
-                            }
-                            if (i == Y - 1)
-                            {
-                                //色を変える
-                            }
-                        }
-                    }
-                    else
-                    {
-                        for (int i = Y + 1; i < y; i++)
-                        {
-                            if (stones[X, i].GetComponent<StoneController>().colorState != StoneController.ColorState.White)
-                            {
-                                break;
-                            }
-                            if (i == y - 1)
-                            {
-                                //色を変える
-                            }
-                        }
-                    }
-                }
-            }
-            //左下から右上
-        }
-        else //白のターン
-        {
-            //白の石を探す
-            //横
-            for (int x = 0; x < 8; x++)
+            //左に向かって確認
+            for (int x = X - 1; x >= 0; x--)
             {
                 if (stones[x, Y].GetComponent<StoneController>().colorState == StoneController.ColorState.White)
                 {
-                    //間がすべて黒なら
-                    if (x < X)
+                    //何もしない
+                }
+                else if (stones[x, Y].GetComponent<StoneController>().colorState == StoneController.ColorState.Black)
+                {
+                    if (x == X - 1)
                     {
-                        for (int i = x + 1; i < X; i++)
-                        {
-                            if (stones[i, Y].GetComponent<StoneController>().colorState != StoneController.ColorState.Black)
-                            {
-                                break;
-                            }
-                            if (i == X - 1)
-                            {
-                                //色を変える
-                            }
-                        }
+                        break;
                     }
                     else
                     {
-                        for (int i = X + 1; i < x; i++)
+                        //この石から右に向かって色を変えていく
+                        for (int turn = x + 1; turn < X; turn++)
                         {
-                            if (stones[i, Y].GetComponent<StoneController>().colorState != StoneController.ColorState.Black)
-                            {
-                                break;
-                            }
-                            if (i == x - 1)
-                            {
-                                //色を変える
-                            }
+                            stones[turn, Y].GetComponent<StoneController>().isRotation = true;
                         }
+                        isPut = true;
+                        break;
                     }
                 }
+                else
+                {
+                    break;
+                }
             }
-            //縦
-            for (int y = 0; y < 8; y++)
+            //右に向かって確認
+            for (int x = X + 1; x <= 8; x++)
+            {
+                if (stones[x, Y].GetComponent<StoneController>().colorState == StoneController.ColorState.White)
+                {
+                    //何もしない
+                }
+                else if (stones[x, Y].GetComponent<StoneController>().colorState == StoneController.ColorState.Black)
+                {
+                    if (x == X + 1)
+                    {
+                        break;
+                    }
+                    else
+                    {
+                        //この石から左に向かって色を変えていく
+                        for (int turn = x - 1; turn > X; turn--)
+                        {
+                            stones[turn, Y].GetComponent<StoneController>().isRotation = true;
+                        }
+                        isPut = true;
+                        break;
+                    }
+                }
+                else
+                {
+                    break;
+                }
+            }
+            //上に向かって確認
+            for (int y = Y - 1; y >= 0; y--)
             {
                 if (stones[X, y].GetComponent<StoneController>().colorState == StoneController.ColorState.White)
                 {
-                    //間がすべて黒なら
-                    if (y < Y)
+                    //何もしない
+                }
+                else if (stones[X, y].GetComponent<StoneController>().colorState == StoneController.ColorState.Black)
+                {
+                    if (y == Y - 1)
                     {
-                        for (int i = y + 1; i < Y; i++)
-                        {
-                            if (stones[X, i].GetComponent<StoneController>().colorState != StoneController.ColorState.Black)
-                            {
-                                break;
-                            }
-                            if (i == Y - 1)
-                            {
-                                //色を変える
-                            }
-                        }
+                        break;
                     }
                     else
                     {
-                        for (int i = Y + 1; i < y; i++)
+                        //この石から下に向かって色を変えていく
+                        for (int turn = y +1; turn > Y; turn++)
                         {
-                            if (stones[X, i].GetComponent<StoneController>().colorState != StoneController.ColorState.Black)
-                            {
-                                break;
-                            }
-                            if (i == y - 1)
-                            {
-                                //色を変える
-                            }
+                            stones[X, turn].GetComponent<StoneController>().isRotation = true;
                         }
+                        isPut = true;
+                        break;
                     }
                 }
+                else
+                {
+                    break;
+                }
             }
-            //左下から右上
+            //下に向かって確認
+            for (int y = Y + 1; y <= 8; y++)
+            {
+                if (stones[X, y].GetComponent<StoneController>().colorState == StoneController.ColorState.White)
+                {
+                    //何もしない
+                }
+                else if (stones[X, y].GetComponent<StoneController>().colorState == StoneController.ColorState.Black)
+                {
+                    if (y == Y + 1)
+                    {
+                        break;
+                    }
+                    else
+                    {
+                        //この石から上に向かって色を変えていく
+                        for (int turn = y - 1; turn > Y; turn--)
+                        {
+                            stones[X, turn].GetComponent<StoneController>().isRotation = true;
+                        }
+                        isPut = true;
+                        break;
+                    }
+                }
+                else
+                {
+                    break;
+                }
+            }
+            //右上に向かって確認
+            for (int Count = 1; Count <= 8; Count++)
+            {
+                if (X + Count > 8 ||  Y - Count < 0)
+                {
+                    break;
+                }
+                else if (stones[X + Count, Y - Count].GetComponent<StoneController>().colorState == StoneController.ColorState.White)
+                {
+                    //何もしない
+                }
+                else if (stones[X + Count, Y - Count].GetComponent<StoneController>().colorState == StoneController.ColorState.Black)
+                {
+                    if (Count == 1)
+                    {
+                        break;
+                    }
+                    else
+                    {
+                        //この石から右上に向かって色を変えていく
+                        stones[X + Count, Y - Count].GetComponent<StoneController>().isRotation = true;
+                    }
+                }
+                else
+                {
+                    break;
+                }
+            }
+            //右下に向かって確認
+            for (int Count = 1; Count <= 8; Count++)
+            {
+                if (X + Count > 8 || Y + Count > 8)
+                {
+                    break;
+                }
+                else if (stones[X + Count, Y + Count].GetComponent<StoneController>().colorState == StoneController.ColorState.White)
+                {
+                    //何もしない
+                }
+                else if (stones[X + Count, Y + Count].GetComponent<StoneController>().colorState == StoneController.ColorState.Black)
+                {
+                    if (Count == 1)
+                    {
+                        break;
+                    }
+                    else
+                    {
+                        //この石から右上に向かって色を変えていく
+                        stones[X + Count, Y + Count].GetComponent<StoneController>().isRotation = true;
+                    }
+                }
+                else
+                {
+                    break;
+                }
+            }
+            //左上に向かって確認
+            for (int Count = 1; Count <= 8; Count++)
+            {
+                if (X - Count < 0 || Y - Count < 0)
+                {
+                    break;
+                }
+                else if (stones[X - Count, Y - Count].GetComponent<StoneController>().colorState == StoneController.ColorState.White)
+                {
+                    //何もしない
+                }
+                else if (stones[X - Count, Y - Count].GetComponent<StoneController>().colorState == StoneController.ColorState.Black)
+                {
+                    if (Count == 1)
+                    {
+                        break;
+                    }
+                    else
+                    {
+                        //この石から右上に向かって色を変えていく
+                        stones[X - Count, Y - Count].GetComponent<StoneController>().isRotation = true;
+                    }
+                }
+                else
+                {
+                    break;
+                }
+            }
+            //左下に向かって確認
+            for (int Count = 1; Count <= 8; Count++)
+            {
+                if (X - Count < 0 || Y + Count > 8)
+                {
+                    break;
+                }
+                else if (stones[X - Count, Y + Count].GetComponent<StoneController>().colorState == StoneController.ColorState.White)
+                {
+                    //何もしない
+                }
+                else if (stones[X - Count, Y + Count].GetComponent<StoneController>().colorState == StoneController.ColorState.Black)
+                {
+                    if (Count == 1)
+                    {
+                        break;
+                    }
+                    else
+                    {
+                        //この石から右上に向かって色を変えていく
+                        stones[X - Count, Y + Count].GetComponent<StoneController>().isRotation = true;
+                    }
+                }
+                else
+                {
+                    break;
+                }
+            }
+        }
+        else //白のターン
+        {
+            //左に向かって確認
+            for (int x = X - 1; x >= 0; x--)
+            {
+                if (stones[x, Y].GetComponent<StoneController>().colorState == StoneController.ColorState.Black)
+                {
+                    //何もしない
+                }
+                else if (stones[x, Y].GetComponent<StoneController>().colorState == StoneController.ColorState.White)
+                {
+                    if (x == X - 1)
+                    {
+                        break;
+                    }
+                    else
+                    {
+                        //この石から右に向かって色を変えていく
+                        for(int turn = x + 1; turn < X; turn++)
+                        {
+                            stones[turn, Y].GetComponent<StoneController>().isRotation = true;
+                        }
+                        isPut = true;
+                        break;
+                    }
+                }
+                else
+                {
+                    break;
+                }
+            }
+            //右に向かって確認
+            for (int x = X + 1; x <= 8; x++)
+            {
+                if (stones[x, Y].GetComponent<StoneController>().colorState == StoneController.ColorState.Black)
+                {
+                    //何もしない
+                }
+                else if (stones[x, Y].GetComponent<StoneController>().colorState == StoneController.ColorState.White)
+                {
+                    if (x == X + 1)
+                    {
+                        break;
+                    }
+                    else
+                    {
+                        //この石から左に向かって色を変えていく
+                        for (int turn = x - 1; turn > X; turn--)
+                        {
+                            stones[turn, Y].GetComponent<StoneController>().isRotation = true;
+                        }
+                        isPut = true;
+                        break;
+                    }
+                }
+                else
+                {
+                    break;
+                }
+            }
+            //上に向かって確認
+            for (int y = Y - 1; y >= 0; y--)
+            {
+                if (stones[X, y].GetComponent<StoneController>().colorState == StoneController.ColorState.Black)
+                {
+                    //何もしない
+                }
+                else if (stones[X, y].GetComponent<StoneController>().colorState == StoneController.ColorState.White)
+                {
+                    if (y == Y - 1)
+                    {
+                        break;
+                    }
+                    else
+                    {
+                        //この石から下に向かって色を変えていく
+                        for (int turn = y + 1; turn < Y; turn++)
+                        {
+                            stones[X, turn].GetComponent<StoneController>().isRotation = true;
+                        }
+                        isPut = true;
+                        break;
+                    }
+                }
+                else
+                {
+                    break;
+                }
+            }
+            //下に向かって確認
+            for (int y = Y + 1; y <= 8; y++)
+            {
+                if (stones[X, y].GetComponent<StoneController>().colorState == StoneController.ColorState.Black)
+                {
+                    //何もしない
+                }
+                else if (stones[X, y].GetComponent<StoneController>().colorState == StoneController.ColorState.White)
+                {
+                    if (y == Y + 1)
+                    {
+                        break;
+                    }
+                    else
+                    {
+                        //この石から上に向かって色を変えていく
+                        for (int turn = y - 1; turn > Y; turn--)
+                        {
+                            stones[X, turn].GetComponent<StoneController>().isRotation = true;
+                        }
+                        isPut = true;
+                        break;
+                    }
+                }
+                else
+                {
+                    break;
+                }
+            }
+            //右上に向かって確認
+            for (int Count = 1; Count <= 8; Count++)
+            {
+                if (X + Count > 8 || Y - Count < 0)
+                {
+                    break;
+                }
+                else if (stones[X + Count, Y - Count].GetComponent<StoneController>().colorState == StoneController.ColorState.Black)
+                {
+                    //何もしない
+                }
+                else if (stones[X + Count, Y - Count].GetComponent<StoneController>().colorState == StoneController.ColorState.White)
+                {
+                    if (Count == 1)
+                    {
+                        break;
+                    }
+                    else
+                    {
+                        //この石から右上に向かって色を変えていく
+                        stones[X + Count, Y - Count].GetComponent<StoneController>().isRotation = true;
+                    }
+                }
+                else
+                {
+                    break;
+                }
+            }
+            //右下に向かって確認
+            for (int Count = 1; Count <= 8; Count++)
+            {
+                if (X + Count > 8 || Y + Count > 8)
+                {
+                    break;
+                }
+                else if (stones[X + Count, Y + Count].GetComponent<StoneController>().colorState == StoneController.ColorState.Black)
+                {
+                    //何もしない
+                }
+                else if (stones[X + Count, Y + Count].GetComponent<StoneController>().colorState == StoneController.ColorState.White)
+                {
+                    if (Count == 1)
+                    {
+                        break;
+                    }
+                    else
+                    {
+                        //この石から右上に向かって色を変えていく
+                        stones[X + Count, Y + Count].GetComponent<StoneController>().isRotation = true;
+                    }
+                }
+                else
+                {
+                    break;
+                }
+            }
+            //左上に向かって確認
+            for (int Count = 1; Count <= 8; Count++)
+            {
+                if (X - Count < 0 || Y - Count < 0)
+                {
+                    break;
+                }
+                else if (stones[X - Count, Y - Count].GetComponent<StoneController>().colorState == StoneController.ColorState.Black)
+                {
+                    //何もしない
+                }
+                else if (stones[X - Count, Y - Count].GetComponent<StoneController>().colorState == StoneController.ColorState.White)
+                {
+                    if (Count == 1)
+                    {
+                        break;
+                    }
+                    else
+                    {
+                        //この石から右上に向かって色を変えていく
+                        stones[X - Count, Y - Count].GetComponent<StoneController>().isRotation = true;
+                    }
+                }
+                else
+                {
+                    break;
+                }
+            }
+            //左下に向かって確認
+            for (int Count = 1; Count <= 8; Count++)
+            {
+                if (X - Count < 0 || Y + Count > 8)
+                {
+                    break;
+                }
+                else if (stones[X - Count, Y + Count].GetComponent<StoneController>().colorState == StoneController.ColorState.Black)
+                {
+                    //何もしない
+                }
+                else if (stones[X - Count, Y + Count].GetComponent<StoneController>().colorState == StoneController.ColorState.White)
+                {
+                    if (Count == 1)
+                    {
+                        break;
+                    }
+                    else
+                    {
+                        //この石から右上に向かって色を変えていく
+                        stones[X - Count, Y + Count].GetComponent<StoneController>().isRotation = true;
+                    }
+                }
+                else
+                {
+                    break;
+                }
+            }
+        }
+
+        if (isPut)
+        {
+            if (turnState == TurnState.Black)
+            {
+                //黒
+                stones[X, Y].GetComponent<Renderer>().material.color = new Color(0, 0, 0, 255);
+                stones[X, Y].GetComponent<StoneController>().colorState = StoneController.ColorState.Black;
+                turnState = TurnState.White;
+                isPut = false;
+                Debug.Log("白のターンに変わる");
+            }
+            else
+            {
+                //黒
+                stones[X, Y].GetComponent<Renderer>().material.color = new Color(255, 255, 255, 255);
+                stones[X, Y].GetComponent<StoneController>().colorState = StoneController.ColorState.White;
+                turnState = TurnState.Black;
+                isPut = false;
+                Debug.Log("黒のターンに変わる");
+            }
         }
     }
 }
