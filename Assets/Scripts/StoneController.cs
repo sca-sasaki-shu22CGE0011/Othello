@@ -16,7 +16,7 @@ public class StoneController : MonoBehaviour
     private float rotationCount;
     private GameController gameController;
 
-    public enum ColorState { None, CanPut, Black, White}
+    public enum ColorState { None, Black, White}
     public ColorState colorState;
     // Start is called before the first frame update
     void Start()
@@ -38,9 +38,9 @@ public class StoneController : MonoBehaviour
 
         if (isRotation)
         {
-            rectTransform.Rotate(0, rotationSpeed * Time.deltaTime, 0);
+            rectTransform.Rotate(0, rotationSpeed * 4 * Time.deltaTime, 0);
             rotationCount += Time.deltaTime;
-            if (rotationTime/2 < rotationCount) //‚Ð‚Á‚­‚è•Ô‚é‚Æ‚«‚Ìˆ—
+            if (rotationTime/(4 * 2) < rotationCount) //‚Ð‚Á‚­‚è•Ô‚é‚Æ‚«‚Ìˆ—
             {
                 if (!isColorChange)
                 {
@@ -58,7 +58,7 @@ public class StoneController : MonoBehaviour
                 }
             }
 
-            if (rotationTime <= rotationCount) //180“x‰ñ‚Á‚½‚ç
+            if (rotationTime/4 <= rotationCount) //180“x‰ñ‚Á‚½‚ç
             {
                 isRotation = false;//rotation‚ðŽ~‚ß‚é
                 isColorChange = false;
