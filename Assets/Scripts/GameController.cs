@@ -1,11 +1,18 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class GameController : MonoBehaviour
 {
+    [SerializeField] private Text turnText;
+    [SerializeField] private Text blackStoneText;
+    [SerializeField] private Text whiteStoneText;
     private GameObject[,] stones;
     private int count;
+    private int blackStones;
+    private int whiteStones;
+    private int passCount;
     private bool isPut;
 
     public enum TurnState { Black, White} //どっちのターンか
@@ -14,9 +21,13 @@ public class GameController : MonoBehaviour
     void Start()
     {
         count = 0;
+        blackStones = 2;
+        whiteStones = 2;
+        passCount = 0;
         isPut = false;
         stones = new GameObject[8,8];//8×8のオブジェクト配列作成
         turnState = TurnState.Black; //最初は黒のターン
+        TurnText();
 
         //配列に各石を入れていく
         for (int x = 0; x < 8; x++)
@@ -58,6 +69,10 @@ public class GameController : MonoBehaviour
             //左に向かって確認
             for (int x = X - 1; x >= 0; x--)
             {
+                if (X == 0)
+                {
+                    break;
+                }
                 if (stones[x, Y].GetComponent<StoneController>().colorState == StoneController.ColorState.White)
                 {
                     //何もしない
@@ -74,6 +89,8 @@ public class GameController : MonoBehaviour
                         for (int turn = x + 1; turn < X; turn++)
                         {
                             stones[turn, Y].GetComponent<StoneController>().isRotation = true;
+                            blackStones++;
+                            whiteStones--;
                         }
                         isPut = true;
                         break;
@@ -87,6 +104,10 @@ public class GameController : MonoBehaviour
             //右に向かって確認
             for (int x = X + 1; x <= 8; x++)
             {
+                if (X == 7)
+                {
+                    break;
+                }
                 if (stones[x, Y].GetComponent<StoneController>().colorState == StoneController.ColorState.White)
                 {
                     //何もしない
@@ -103,6 +124,8 @@ public class GameController : MonoBehaviour
                         for (int turn = x - 1; turn > X; turn--)
                         {
                             stones[turn, Y].GetComponent<StoneController>().isRotation = true;
+                            blackStones++;
+                            whiteStones--;
                         }
                         isPut = true;
                         break;
@@ -116,6 +139,10 @@ public class GameController : MonoBehaviour
             //上に向かって確認
             for (int y = Y - 1; y >= 0; y--)
             {
+                if (Y == 0)
+                {
+                    break;
+                }
                 if (stones[X, y].GetComponent<StoneController>().colorState == StoneController.ColorState.White)
                 {
                     //何もしない
@@ -132,6 +159,8 @@ public class GameController : MonoBehaviour
                         for (int turn = y +1; turn > Y; turn++)
                         {
                             stones[X, turn].GetComponent<StoneController>().isRotation = true;
+                            blackStones++;
+                            whiteStones--;
                         }
                         isPut = true;
                         break;
@@ -145,6 +174,10 @@ public class GameController : MonoBehaviour
             //下に向かって確認
             for (int y = Y + 1; y <= 8; y++)
             {
+                if (Y == 7)
+                {
+                    break;
+                }
                 if (stones[X, y].GetComponent<StoneController>().colorState == StoneController.ColorState.White)
                 {
                     //何もしない
@@ -161,6 +194,8 @@ public class GameController : MonoBehaviour
                         for (int turn = y - 1; turn > Y; turn--)
                         {
                             stones[X, turn].GetComponent<StoneController>().isRotation = true;
+                            blackStones++;
+                            whiteStones--;
                         }
                         isPut = true;
                         break;
@@ -174,11 +209,11 @@ public class GameController : MonoBehaviour
             //右上に向かって確認
             for (int Count = 1; Count <= 8; Count++)
             {
-                if (X + Count > 8 ||  Y - Count < 0)
+                if (X == 7 || Y == 0)
                 {
                     break;
                 }
-                else if (stones[X + Count, Y - Count].GetComponent<StoneController>().colorState == StoneController.ColorState.White)
+                if (stones[X + Count, Y - Count].GetComponent<StoneController>().colorState == StoneController.ColorState.White)
                 {
                     //何もしない
                 }
@@ -190,11 +225,24 @@ public class GameController : MonoBehaviour
                     }
                     else
                     {
-                        //この石から右上に向かって色を変えていく
-                        stones[X + Count, Y - Count].GetComponent<StoneController>().isRotation = true;
+                        //置いた石から右上に向かって色を変えていく
+                        for (int turn = 1; turn < Count; turn++)
+                        {
+                            stones[X+turn,Y-turn].GetComponent<StoneController>().isRotation = true;
+                            blackStones++;
+                            whiteStones--;
+                        }
+                        isPut = true;
+                        break;
                     }
                 }
                 else
+                {
+                    break;
+                }
+
+                //盤面外に出そうになったら抜ける
+                if (X + Count >= 8 || Y - Count <= 0)
                 {
                     break;
                 }
@@ -202,11 +250,11 @@ public class GameController : MonoBehaviour
             //右下に向かって確認
             for (int Count = 1; Count <= 8; Count++)
             {
-                if (X + Count > 8 || Y + Count > 8)
+                if (X == 7 || Y == 7)
                 {
                     break;
                 }
-                else if (stones[X + Count, Y + Count].GetComponent<StoneController>().colorState == StoneController.ColorState.White)
+                if (stones[X + Count, Y + Count].GetComponent<StoneController>().colorState == StoneController.ColorState.White)
                 {
                     //何もしない
                 }
@@ -218,11 +266,24 @@ public class GameController : MonoBehaviour
                     }
                     else
                     {
-                        //この石から右上に向かって色を変えていく
-                        stones[X + Count, Y + Count].GetComponent<StoneController>().isRotation = true;
+                        //置いた石から右上に向かって色を変えていく
+                        for (int turn = 1; turn < Count; turn++)
+                        {
+                            stones[X + turn, Y + turn].GetComponent<StoneController>().isRotation = true;
+                            blackStones++;
+                            whiteStones--;
+                        }
+                        isPut = true;
+                        break;
                     }
                 }
                 else
+                {
+                    break;
+                }
+
+                //盤面外に出そうになったら抜ける
+                if (X + Count >= 8 || Y + Count >= 8)
                 {
                     break;
                 }
@@ -230,11 +291,11 @@ public class GameController : MonoBehaviour
             //左上に向かって確認
             for (int Count = 1; Count <= 8; Count++)
             {
-                if (X - Count < 0 || Y - Count < 0)
+                if (X == 0 || Y == 0)
                 {
                     break;
                 }
-                else if (stones[X - Count, Y - Count].GetComponent<StoneController>().colorState == StoneController.ColorState.White)
+                if (stones[X - Count, Y - Count].GetComponent<StoneController>().colorState == StoneController.ColorState.White)
                 {
                     //何もしない
                 }
@@ -246,11 +307,24 @@ public class GameController : MonoBehaviour
                     }
                     else
                     {
-                        //この石から右上に向かって色を変えていく
-                        stones[X - Count, Y - Count].GetComponent<StoneController>().isRotation = true;
+                        //置いた石から左上に向かって色を変えていく
+                        for (int turn = 1; turn < Count; turn++)
+                        {
+                            stones[X - turn, Y - turn].GetComponent<StoneController>().isRotation = true;
+                            blackStones++;
+                            whiteStones--;
+                        }
+                        isPut = true;
+                        break;
                     }
                 }
                 else
+                {
+                    break;
+                }
+
+                //盤面外に出そうになったら抜ける
+                if (X - Count <= 0 || Y - Count <= 0)
                 {
                     break;
                 }
@@ -258,11 +332,11 @@ public class GameController : MonoBehaviour
             //左下に向かって確認
             for (int Count = 1; Count <= 8; Count++)
             {
-                if (X - Count < 0 || Y + Count > 8)
+                if (X == 0 || Y == 7)
                 {
                     break;
                 }
-                else if (stones[X - Count, Y + Count].GetComponent<StoneController>().colorState == StoneController.ColorState.White)
+                if (stones[X - Count, Y + Count].GetComponent<StoneController>().colorState == StoneController.ColorState.White)
                 {
                     //何もしない
                 }
@@ -274,11 +348,24 @@ public class GameController : MonoBehaviour
                     }
                     else
                     {
-                        //この石から右上に向かって色を変えていく
-                        stones[X - Count, Y + Count].GetComponent<StoneController>().isRotation = true;
+                        //置いた石から左下に向かって色を変えていく
+                        for (int turn = 1; turn < Count; turn++)
+                        {
+                            stones[X - turn, Y + turn].GetComponent<StoneController>().isRotation = true;
+                            blackStones++;
+                            whiteStones--;
+                        }
+                        isPut = true;
+                        break;
                     }
                 }
                 else
+                {
+                    break;
+                }
+
+                //盤面外に出そうになったら抜ける
+                if (X - Count <= 0 || Y + Count >= 8)
                 {
                     break;
                 }
@@ -289,6 +376,10 @@ public class GameController : MonoBehaviour
             //左に向かって確認
             for (int x = X - 1; x >= 0; x--)
             {
+                if (X == 0)
+                {
+                    break;
+                }
                 if (stones[x, Y].GetComponent<StoneController>().colorState == StoneController.ColorState.Black)
                 {
                     //何もしない
@@ -305,6 +396,8 @@ public class GameController : MonoBehaviour
                         for(int turn = x + 1; turn < X; turn++)
                         {
                             stones[turn, Y].GetComponent<StoneController>().isRotation = true;
+                            whiteStones++;
+                            blackStones--;
                         }
                         isPut = true;
                         break;
@@ -318,6 +411,10 @@ public class GameController : MonoBehaviour
             //右に向かって確認
             for (int x = X + 1; x <= 8; x++)
             {
+                if (X == 7)
+                {
+                    break;
+                }
                 if (stones[x, Y].GetComponent<StoneController>().colorState == StoneController.ColorState.Black)
                 {
                     //何もしない
@@ -334,6 +431,8 @@ public class GameController : MonoBehaviour
                         for (int turn = x - 1; turn > X; turn--)
                         {
                             stones[turn, Y].GetComponent<StoneController>().isRotation = true;
+                            whiteStones++;
+                            blackStones--;
                         }
                         isPut = true;
                         break;
@@ -347,6 +446,10 @@ public class GameController : MonoBehaviour
             //上に向かって確認
             for (int y = Y - 1; y >= 0; y--)
             {
+                if (Y == 0)
+                {
+                    break;
+                }
                 if (stones[X, y].GetComponent<StoneController>().colorState == StoneController.ColorState.Black)
                 {
                     //何もしない
@@ -363,6 +466,8 @@ public class GameController : MonoBehaviour
                         for (int turn = y + 1; turn < Y; turn++)
                         {
                             stones[X, turn].GetComponent<StoneController>().isRotation = true;
+                            whiteStones++;
+                            blackStones--;
                         }
                         isPut = true;
                         break;
@@ -375,7 +480,11 @@ public class GameController : MonoBehaviour
             }
             //下に向かって確認
             for (int y = Y + 1; y <= 8; y++)
-            {
+            { 
+                if (Y == 7)
+                {
+                    break;
+                }
                 if (stones[X, y].GetComponent<StoneController>().colorState == StoneController.ColorState.Black)
                 {
                     //何もしない
@@ -392,6 +501,8 @@ public class GameController : MonoBehaviour
                         for (int turn = y - 1; turn > Y; turn--)
                         {
                             stones[X, turn].GetComponent<StoneController>().isRotation = true;
+                            whiteStones++;
+                            blackStones--;
                         }
                         isPut = true;
                         break;
@@ -405,11 +516,11 @@ public class GameController : MonoBehaviour
             //右上に向かって確認
             for (int Count = 1; Count <= 8; Count++)
             {
-                if (X + Count > 8 || Y - Count < 0)
+                if (X == 7 || Y == 0)
                 {
                     break;
                 }
-                else if (stones[X + Count, Y - Count].GetComponent<StoneController>().colorState == StoneController.ColorState.Black)
+                if (stones[X + Count, Y - Count].GetComponent<StoneController>().colorState == StoneController.ColorState.Black)
                 {
                     //何もしない
                 }
@@ -421,11 +532,24 @@ public class GameController : MonoBehaviour
                     }
                     else
                     {
-                        //この石から右上に向かって色を変えていく
-                        stones[X + Count, Y - Count].GetComponent<StoneController>().isRotation = true;
+                        //置いた石から右上に向かって色を変えていく
+                        for (int turn = 1; turn < Count; turn++)
+                        {
+                            stones[X + turn, Y - turn].GetComponent<StoneController>().isRotation = true;
+                            whiteStones++;
+                            blackStones--;
+                        }
+                        isPut = true;
+                        break;
                     }
                 }
                 else
+                {
+                    break;
+                }
+
+                //盤面外に出そうになったら抜ける
+                if (X + Count >= 8 || Y - Count <= 0)
                 {
                     break;
                 }
@@ -433,11 +557,11 @@ public class GameController : MonoBehaviour
             //右下に向かって確認
             for (int Count = 1; Count <= 8; Count++)
             {
-                if (X + Count > 8 || Y + Count > 8)
+                if (X == 7 || Y == 7)
                 {
                     break;
                 }
-                else if (stones[X + Count, Y + Count].GetComponent<StoneController>().colorState == StoneController.ColorState.Black)
+                if (stones[X + Count, Y + Count].GetComponent<StoneController>().colorState == StoneController.ColorState.Black)
                 {
                     //何もしない
                 }
@@ -449,11 +573,24 @@ public class GameController : MonoBehaviour
                     }
                     else
                     {
-                        //この石から右上に向かって色を変えていく
-                        stones[X + Count, Y + Count].GetComponent<StoneController>().isRotation = true;
+                        //置いた石から右上に向かって色を変えていく
+                        for (int turn = 1; turn < Count; turn++)
+                        {
+                            stones[X + turn, Y + turn].GetComponent<StoneController>().isRotation = true;
+                            whiteStones++;
+                            blackStones--;
+                        }
+                        isPut = true;
+                        break;
                     }
                 }
                 else
+                {
+                    break;
+                }
+
+                //盤面外に出そうになったら抜ける
+                if (X + Count >= 8 || Y + Count >= 8)
                 {
                     break;
                 }
@@ -461,11 +598,11 @@ public class GameController : MonoBehaviour
             //左上に向かって確認
             for (int Count = 1; Count <= 8; Count++)
             {
-                if (X - Count < 0 || Y - Count < 0)
+                if (X == 0 || Y == 0)
                 {
                     break;
                 }
-                else if (stones[X - Count, Y - Count].GetComponent<StoneController>().colorState == StoneController.ColorState.Black)
+                if (stones[X - Count, Y - Count].GetComponent<StoneController>().colorState == StoneController.ColorState.Black)
                 {
                     //何もしない
                 }
@@ -477,11 +614,24 @@ public class GameController : MonoBehaviour
                     }
                     else
                     {
-                        //この石から右上に向かって色を変えていく
-                        stones[X - Count, Y - Count].GetComponent<StoneController>().isRotation = true;
+                        //置いた石から左上に向かって色を変えていく
+                        for (int turn = 1; turn < Count; turn++)
+                        {
+                            stones[X - turn, Y - turn].GetComponent<StoneController>().isRotation = true;
+                            whiteStones++;
+                            blackStones--;
+                        }
+                        isPut = true;
+                        break;
                     }
                 }
                 else
+                {
+                    break;
+                }
+
+                //盤面外に出そうになったら抜ける
+                if (X - Count <= 0 || Y - Count <= 0)
                 {
                     break;
                 }
@@ -489,11 +639,11 @@ public class GameController : MonoBehaviour
             //左下に向かって確認
             for (int Count = 1; Count <= 8; Count++)
             {
-                if (X - Count < 0 || Y + Count > 8)
+                if (X == 0 || Y == 7)
                 {
                     break;
                 }
-                else if (stones[X - Count, Y + Count].GetComponent<StoneController>().colorState == StoneController.ColorState.Black)
+                if (stones[X - Count, Y + Count].GetComponent<StoneController>().colorState == StoneController.ColorState.Black)
                 {
                     //何もしない
                 }
@@ -505,11 +655,24 @@ public class GameController : MonoBehaviour
                     }
                     else
                     {
-                        //この石から右上に向かって色を変えていく
-                        stones[X - Count, Y + Count].GetComponent<StoneController>().isRotation = true;
+                        //置いた石から左下に向かって色を変えていく
+                        for (int turn = 1; turn < Count; turn++)
+                        {
+                            stones[X - turn, Y + turn].GetComponent<StoneController>().isRotation = true;
+                            whiteStones++;
+                            blackStones--;
+                        }
+                        isPut = true;
+                        break;
                     }
                 }
                 else
+                {
+                    break;
+                }
+
+                //盤面外に出そうになったら抜ける
+                if (X - Count <= 0 || Y + Count >= 8)
                 {
                     break;
                 }
@@ -525,7 +688,11 @@ public class GameController : MonoBehaviour
                 stones[X, Y].GetComponent<StoneController>().colorState = StoneController.ColorState.Black;
                 turnState = TurnState.White;
                 isPut = false;
+                blackStones++;
+                blackStoneText.text = "" + blackStones;
+                whiteStoneText.text = "" + whiteStones;
                 Debug.Log("白のターンに変わる");
+                TurnText();
             }
             else
             {
@@ -534,8 +701,67 @@ public class GameController : MonoBehaviour
                 stones[X, Y].GetComponent<StoneController>().colorState = StoneController.ColorState.White;
                 turnState = TurnState.Black;
                 isPut = false;
+                whiteStones++;
+                blackStoneText.text = "" + blackStones;
+                whiteStoneText.text = "" + whiteStones;
                 Debug.Log("黒のターンに変わる");
+                TurnText();
+            }
+            passCount = 0;
+            Debug.Log("黒 : " + blackStones + " 白 : " +  whiteStones);
+            if (blackStones + whiteStones >= 64)
+            {
+                GameOver();
             }
         }
+    }
+
+    private void TurnText()
+    {
+        if (turnState == TurnState.Black)
+        {
+            turnText.text = "黒のターン";
+        }
+        else
+        {
+            turnText.text = "白のターン";
+        }
+    }
+
+    public void PassButton()
+    {
+        if (turnState == TurnState.Black)
+        {
+            turnState = TurnState.White;
+            TurnText();
+        }
+        else
+        {
+            turnState = TurnState.Black;
+            TurnText();
+        }
+        passCount++;
+        if (passCount >= 2)
+        {
+            GameOver();
+        }
+    }
+
+    private void GameOver()
+    {
+        if (blackStones > whiteStones)
+        {
+            turnText.text = "黒の勝ち！";
+        }
+        else if (whiteStones > blackStones)
+        {
+            turnText.text = "白の勝ち！";
+        }
+        else
+        {
+            turnText.text = "引き分け";
+        }
+
+        this.GetComponent<GameController>().enabled = false;
     }
 }

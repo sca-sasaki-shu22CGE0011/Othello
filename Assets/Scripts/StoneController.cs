@@ -9,10 +9,12 @@ public class StoneController : MonoBehaviour
 
     public int number;
     public bool isRotation;
+    public bool canTouch;
     private bool isColorChange;
     private float rotationSpeed;
     private float rotationTime;
     private float rotationCount;
+    private GameController gameController;
 
     public enum ColorState { None, CanPut, Black, White}
     public ColorState colorState;
@@ -21,6 +23,7 @@ public class StoneController : MonoBehaviour
     {
         rectTransform = GetComponent<RectTransform>();
         renderer = GetComponent<Renderer>();
+        gameController = FindObjectOfType<GameController>();
         isRotation = false;
         isColorChange = false;
         rotationSpeed = 180.0f;
@@ -68,16 +71,15 @@ public class StoneController : MonoBehaviour
     {
         int Y = 0;
         int X = 0;
-        number = number - 1;
-        if (number <= 8)
+        if ((number-1) < 8)
         {
-            Y = number;
+            Y = number-1;
         }
         else
         {
-            X = number / 8;
-            Y = (number - (8 * X)) % 8;
+            X = (number-1) / 8;
+            Y = ((number-1) - (8 * X)) % 8;
         }
-        FindObjectOfType<GameController>().PutCheck(X,Y);
+        gameController.PutCheck(X,Y);
     }
 }
