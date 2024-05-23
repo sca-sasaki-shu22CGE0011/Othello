@@ -18,6 +18,8 @@ public class StoneController : MonoBehaviour
 
     public enum ColorState { None, Black, White}
     public ColorState colorState;
+    public enum RecordState { None, Black, White }
+    public RecordState recordState;
     // Start is called before the first frame update
     void Start()
     {

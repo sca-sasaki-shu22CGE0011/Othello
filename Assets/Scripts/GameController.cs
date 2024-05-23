@@ -53,6 +53,8 @@ public class GameController : MonoBehaviour
         stones[3, 4].GetComponent<StoneController>().colorState = StoneController.ColorState.Black;
         stones[4, 3].GetComponent<Renderer>().material.color = new Color(0, 0, 0, 255);
         stones[4, 3].GetComponent<StoneController>().colorState = StoneController.ColorState.Black;
+
+        Record();
     }
 
     // Update is called once per frame
@@ -63,7 +65,6 @@ public class GameController : MonoBehaviour
 
     public void PutCheck(int X, int Y) //置くことができるか確認
     {
-        Debug.Log("X = " + X + "Y = " + Y);
         if (turnState == TurnState.Black) //黒のターン
         {
             //左に向かって確認
@@ -783,6 +784,7 @@ public class GameController : MonoBehaviour
 
         if (isPut)
         {
+            Record();
             if (turnState == TurnState.Black)
             {
                 //黒
@@ -793,12 +795,18 @@ public class GameController : MonoBehaviour
                 blackStones++;
                 blackStoneText.text = "" + blackStones;
                 whiteStoneText.text = "" + whiteStones;
-                Debug.Log("白のターンに変わる");
-                TurnText();
+                if (whiteStones <= 0)
+                {
+                    GameOver();
+                }
+                else
+                {
+                    TurnText();
+                }
             }
             else
             {
-                //黒
+                //白
                 stones[X, Y].GetComponent<Renderer>().material.color = new Color(255, 255, 255, 255);
                 stones[X, Y].GetComponent<StoneController>().colorState = StoneController.ColorState.White;
                 turnState = TurnState.Black;
@@ -806,8 +814,14 @@ public class GameController : MonoBehaviour
                 whiteStones++;
                 blackStoneText.text = "" + blackStones;
                 whiteStoneText.text = "" + whiteStones;
-                Debug.Log("黒のターンに変わる");
-                TurnText();
+                if (blackStones <= 0)
+                {
+                    GameOver();
+                }
+                else
+                {
+                    TurnText();
+                }
             }
             passCount = 0;
             if (blackStones + whiteStones >= 64)
@@ -906,5 +920,67 @@ public class GameController : MonoBehaviour
                 stones[x, y].GetComponent<CircleCollider2D>().enabled = false;
             }
         }
+    }
+
+    private void Record()
+    {
+        for (int x = 0; x < 8; x++)
+        {
+            for (int y = 0; y < 8; y++)
+            {
+                if (stones[x,y].GetComponent<StoneController>().colorState == StoneController.ColorState.None)
+                {
+                    stones[x, y].GetComponent<StoneController>().recordState = StoneController.RecordState.None;
+                }
+                else if (stones[x, y].GetComponent<StoneController>().colorState == StoneController.ColorState.White)
+                {
+                    stones[x, y].GetComponent<StoneController>().recordState = StoneController.RecordState.White;
+                }
+                else if (stones[x, y].GetComponent<StoneController>().colorState == StoneController.ColorState.Black)
+                {
+                    stones[x, y].GetComponent<StoneController>().recordState = StoneController.RecordState.Black;
+                }
+            }
+        }
+    }
+
+    public void Return()
+    {
+        blackStones = 0;
+        whiteStones = 0;
+        for (int x = 0; x < 8; x++)
+        {
+            for (int y = 0; y < 8; y++)
+            {
+                if (stones[x, y].GetComponent<StoneController>().recordState == StoneController.RecordState.None)
+                {
+                    stones[x, y].GetComponent<Renderer>().material.color = new Color(255, 255, 255, 0);
+                    stones[x, y].GetComponent<StoneController>().colorState = StoneController.ColorState.None;
+                }
+                else if (stones[x, y].GetComponent<StoneController>().recordState == StoneController.RecordState.White)
+                {
+                    stones[x, y].GetComponent<Renderer>().material.color = new Color(255, 255, 255, 255);
+                    stones[x, y].GetComponent<StoneController>().colorState = StoneController.ColorState.White;
+                    whiteStones++;
+                }
+                else if (stones[x, y].GetComponent<StoneController>().recordState == StoneController.RecordState.Black)
+                {
+                    stones[x, y].GetComponent<Renderer>().material.color = new Color(0, 0, 0, 255);
+                    stones[x, y].GetComponent<StoneController>().colorState = StoneController.ColorState.Black;
+                    blackStones++;
+                }
+            }
+        }
+        if (turnState == TurnState.White)
+        {
+            turnState = TurnState.Black;
+        }
+        else if (turnState == TurnState.Black)
+        {
+            turnState = TurnState.White;
+        }
+        blackStoneText.text = "" + blackStones;
+        whiteStoneText.text = "" + whiteStones;
+        TurnText();
     }
 }
